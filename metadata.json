@@ -1,0 +1,10 @@
+{
+  "name": "Remix: ROSE Pink Tech System",
+  "description": "An advanced, ultra-intelligent ROSE AI assistant interface styled in hot pink Stark tech holographic HUD aesthetics, equipped with psychology expertise, axolotl biology \u0026 regeneration mechanics, and interactive 3D neural holographic simulations.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
