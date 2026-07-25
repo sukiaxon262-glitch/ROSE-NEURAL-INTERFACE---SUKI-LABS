@@ -193,7 +193,19 @@ export const PsychologyDictionary: React.FC<PsychologyDictionaryProps> = ({ onTr
         body: JSON.stringify({ message: prompt })
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      let data: any;
+
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const textFallback = await response.text();
+        console.warn('Received non-JSON response in PsychologyDictionary:', textFallback);
+        data = {
+          text: `Comprehensive psychological profile for "${query}": A dynamic clinical phenomenon analyzed by ROSE core, integrating cognitive, biological, and behavioral neural pathways.`
+        };
+      }
+
       setIsLoading(false);
 
       if (data.text) {

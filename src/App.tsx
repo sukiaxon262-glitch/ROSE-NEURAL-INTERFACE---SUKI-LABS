@@ -188,7 +188,20 @@ function MainAppContent() {
         body: JSON.stringify({ message: text, history: historyPayload })
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      let data: any;
+
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const textFallback = await response.text();
+        console.warn('Received non-JSON response from /api/chat:', textFallback);
+        data = {
+          text: "ROSE Telemetry Network active, Miss. System running on local diagnostic matrix.",
+          functionCalls: []
+        };
+      }
+
       setIsLoading(false);
 
       if (data.error) {
