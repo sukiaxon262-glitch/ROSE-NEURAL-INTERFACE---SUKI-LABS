@@ -42,14 +42,45 @@ export class SpeechEngine {
 
     const utterance = new SpeechSynthesisUtterance(cleanedText);
     utterance.rate = 1.05; // Sophisticated, articulate velocity
-    utterance.pitch = 0.95; // Slightly lower, calm tone
+    utterance.pitch = 1.15; // Pleasant, articulate feminine pitch tone
 
     const voices = this.synth.getVoices();
-    // Prefer articulate British or Natural English voice if available
-    const preferredVoice = voices.find(v => 
-      (v.lang.includes('en-GB') || v.lang.includes('en-US')) && 
-      (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Daniel') || v.name.includes('Oliver') || v.name.includes('Male'))
-    ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+    
+    // Explicit list of known female voice names across OS/browsers
+    const femaleVoiceKeywords = [
+      'female', 'samantha', 'victoria', 'karen', 'zira', 'moira', 'fiona', 'kate', 
+      'serena', 'ava', 'allison', 'aria', 'jenny', 'ana', 'sonia', 'mia', 'emma', 
+      'siri', 'cortana', 'google uk english female', 'google us english', 'susan', 'veena'
+    ];
+
+    const maleVoiceKeywords = [
+      'male', 'daniel', 'oliver', 'david', 'george', 'james', 'guy', 'stefan', 
+      'alex', 'fred', 'arthur', 'tom', 'microsoft mark'
+    ];
+
+    // 1. Try to find an English voice matching female keywords
+    let preferredVoice = voices.find(v => {
+      const name = v.name.toLowerCase();
+      const isEnglish = v.lang.startsWith('en');
+      const isFemale = femaleVoiceKeywords.some(kw => name.includes(kw));
+      const isMale = maleVoiceKeywords.some(kw => name.includes(kw));
+      return isEnglish && isFemale && !isMale;
+    });
+
+    // 2. If not found, find any English voice that does not explicitly match male keywords
+    if (!preferredVoice) {
+      preferredVoice = voices.find(v => {
+        const name = v.name.toLowerCase();
+        const isEnglish = v.lang.startsWith('en');
+        const isMale = maleVoiceKeywords.some(kw => name.includes(kw));
+        return isEnglish && !isMale;
+      });
+    }
+
+    // 3. Fallback to any English voice or first available voice
+    if (!preferredVoice) {
+      preferredVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    }
 
     if (preferredVoice) {
       utterance.voice = preferredVoice;
