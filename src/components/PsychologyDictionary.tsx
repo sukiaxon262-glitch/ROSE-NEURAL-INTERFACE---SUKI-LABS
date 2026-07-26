@@ -102,6 +102,174 @@ const FEATURED_CONCEPTS: ConceptDefinition[] = [
     axolotlParallel: 'Axolotls possess sensitive lateral line sensory organs to detect ambient aquatic motion; similarly, social anxiety reflects a hyper-attuned threat detection response in social settings.',
     neurotransmittersOrTheorists: ['Serotonin', 'GABA', 'Amygdala Hyperactivity', 'Albert Ellis'],
     simulationType: 'amygdala_response'
+  },
+  {
+    title: 'Generalized Anxiety Disorder (GAD)',
+    category: 'Disorder',
+    definition: 'A chronic mental health disorder marked by uncontrollable, persistent, and excessive worry about everyday events, health, finance, and social interactions for at least six months.',
+    keyFeatures: [
+      'Pervasive worry & somatic symptoms (muscle tightness, fatigue, restlessness)',
+      'Hypervigilant threat scanning & BNST / Amygdala hyper-reactivity',
+      'Impaired cognitive flexibility and difficulty managing uncertainty'
+    ],
+    clinicalApplication: 'Treated via Cognitive Behavioral Therapy (CBT), worry exposure, acceptance techniques, progressive muscle relaxation, and SSRIs or SNRIs.',
+    axolotlParallel: 'Continuous sensory environmental monitoring in aquatic habitats parallels the hyper-attuned threat scanning mechanism seen in generalized anxiety.',
+    neurotransmittersOrTheorists: ['GABA', 'Serotonin', 'Norepinephrine', 'BNST Network'],
+    simulationType: 'amygdala_response'
+  },
+  {
+    title: 'Long-Term Potentiation (LTP)',
+    category: 'Neuroscience',
+    definition: 'A persistent, long-lasting strengthening of synapses based on recent patterns of high-frequency stimulation, forming the primary cellular mechanism of memory and learning.',
+    keyFeatures: [
+      'NMDA receptor activation and intracellular calcium influx',
+      'AMPA receptor insertion into postsynaptic membranes & dendritic spine expansion',
+      'Forms the neurobiological baseline for Hebbian learning ("cells that fire together, wire together")'
+    ],
+    clinicalApplication: 'Provides the empirical basis for neuro-rehabilitation and cognitive training, demonstrating that structured therapeutic practice physically rewires synaptic pathways.',
+    axolotlParallel: 'Parallels the bio-electrical priming of precursor blastema cells before rapid cellular proliferation and pattern formation during limb regeneration.',
+    neurotransmittersOrTheorists: ['Glutamate', 'NMDA Receptors', 'AMPA Receptors', 'Terje Lømo'],
+    simulationType: 'dopamine_synapse'
+  },
+  {
+    title: 'Obsessive-Compulsive Disorder (OCD)',
+    category: 'Disorder',
+    definition: 'A neurobehavioral condition characterized by persistent, distressing intrusive thoughts or urges (obsessions) followed by repetitive behaviors or mental rituals (compulsions) executed to reduce anxiety.',
+    keyFeatures: [
+      'Cortico-striato-thalamo-cortical (CSTC) loop hyper-reactivity',
+      'Egodystonic intrusive thoughts paired with compulsive safety seeking',
+      'Distorted risk appraisal and impaired behavioral inhibition'
+    ],
+    clinicalApplication: 'Primarily treated through Exposure and Response Prevention (ERP) therapy alongside high-dose SSRIs to quiet hyperactive CSTC feedback loops.',
+    axolotlParallel: 'Analogous to repetitive cellular repair loops in tissue regeneration when normal stopping signals are temporarily delayed.',
+    neurotransmittersOrTheorists: ['Serotonin', 'Dopamine', 'CSTC Circuit', 'Jeffrey Schwartz'],
+    simulationType: 'cbt_restructuring'
+  },
+  {
+    title: 'Default Mode Network (DMN)',
+    category: 'Neuroscience',
+    definition: 'A large-scale network of interacting brain regions (mPFC, PCC, precuneus) that remains highly active when an individual is engaged in self-referential thought, daydreaming, or autobiographical memory.',
+    keyFeatures: [
+      'Hyperactive and hyper-connected in major depressive disorder and anxiety',
+      'Deactivates during goal-directed, externally focused cognitive tasks',
+      'Primary neural target altered by mindfulness meditation and neurofeedback'
+    ],
+    clinicalApplication: 'Mindfulness training and CBT target DMN hyper-connectivity, helping patients disengage from automatic self-critical rumination and depressive loops.',
+    axolotlParallel: 'Corresponds to the baseline resting state of undifferentiated stem cells prior to external signaling triggering blastema formation.',
+    neurotransmittersOrTheorists: ['Marcus Raichle', 'mPFC', 'Posterior Cingulate Cortex', 'GABA'],
+    simulationType: 'cbt_restructuring'
+  },
+  {
+    title: 'Attachment Theory',
+    category: 'Theory',
+    definition: 'A developmental framework proposing that early emotional bonds formed with primary caregivers establish internal working models that govern emotional regulation and romantic relationship patterns throughout life.',
+    keyFeatures: [
+      'Four primary attachment styles: Secure, Anxious-Preoccupied, Dismissive-Avoidant, Fearful-Avoidant',
+      'Oxytocin and endogenous opioid systems modulate bonding and distress tolerance',
+      'Influences stress reactivity, self-worth, and interpersonal conflict management'
+    ],
+    clinicalApplication: 'Used in relational and psychodynamic therapies to foster an "earned secure" attachment through a safe, attuned therapeutic alliance.',
+    axolotlParallel: 'Directly parallels the critical neurovascular signaling cues required between nerve fibers and wound epithelium for successful tissue growth.',
+    neurotransmittersOrTheorists: ['John Bowlby', 'Mary Ainsworth', 'Oxytocin', 'Vagus Nerve'],
+    simulationType: 'amygdala_response'
+  },
+  {
+    title: 'Bipolar Spectrum Disorders',
+    category: 'Disorder',
+    definition: 'A class of mood disorders characterized by severe shifts in mood, energy, activity levels, and concentration, oscillating between manic or hypomanic elevation and major depressive episodes.',
+    keyFeatures: [
+      'Dysregulation of circadian clock genes and mitochondrial cellular energy metabolism',
+      'Dopaminergic hypersensitivity during manic phases & monoamine depletion during depressive phases',
+      'Interruption of normal fronto-limbic functional connectivity'
+    ],
+    clinicalApplication: 'Managed through mood stabilizers (Lithium, Valproate), psychoeducation, and Interpersonal and Social Rhythm Therapy (IPSRT) to stabilize circadian cues.',
+    axolotlParallel: 'Reflects dramatic metabolic shifts between winter developmental quiescence and rapid spring tissue growth in axolotl biology.',
+    neurotransmittersOrTheorists: ['Lithium', 'Dopamine', 'Glutamate', 'Circadian Clock Genes'],
+    simulationType: 'dopamine_synapse'
+  },
+  {
+    title: 'Classical & Operant Conditioning',
+    category: 'Theory',
+    definition: 'Foundational learning theories detailing how organisms acquire behaviors through environmental associations (Pavlovian stimulus pairing) and consequence contingencies (Skinnerian reinforcement).',
+    keyFeatures: [
+      'Stimulus-response pairing, extinction learning, and spontaneous recovery',
+      'Reinforcement schedules (variable ratio, fixed interval) shaping habit persistence',
+      'Dopaminergic reward prediction error signals in the ventral striatum'
+    ],
+    clinicalApplication: 'Forms the foundation for behavioral activation, systematic exposure desensitization, token economies, and addiction contingency management.',
+    axolotlParallel: 'Parallels cellular chemotaxis where chemical concentration gradients guide migrating precursor blastema cells along molecular tracks.',
+    neurotransmittersOrTheorists: ['Ivan Pavlov', 'B.F. Skinner', 'Dopamine', 'Striatum Network'],
+    simulationType: 'dopamine_synapse'
+  },
+  {
+    title: 'Polyvagal Theory',
+    category: 'Theory',
+    definition: 'A neurobiological model developed by Stephen Porges that maps how the autonomic nervous system evaluates safety and threat cues (neuroception) across three evolutionary hierarchy branches.',
+    keyFeatures: [
+      'Three autonomic hierarchy states: Ventral Vagal (Social Engagement), Sympathetic (Mobilization/Fight-Flight), Dorsal Vagal (Immobilization/Shutdown)',
+      'Unconscious neuroception scans environment for safety or danger triggers',
+      'Vagal nerve regulation of cardiac heart rate variability (HRV) and facial emotional expression'
+    ],
+    clinicalApplication: 'Informs trauma-informed therapy and somatic experiencing, helping clients track autonomic state shifts and restore ventral vagal safety regulation.',
+    axolotlParallel: 'Axolotls rely on branchial vagal motor pathways for aquatic respiration and rapid metabolic deceleration during extreme environmental stress.',
+    neurotransmittersOrTheorists: ['Stephen Porges', 'Vagus Nerve', 'Acetylcholine', 'HRV Regulation'],
+    simulationType: 'amygdala_response'
+  },
+  {
+    title: 'Borderline Personality Disorder (BPD)',
+    category: 'Disorder',
+    definition: 'A personality disorder marked by pervasive emotional dysregulation, instability in interpersonal relationships and self-concept, intense fear of abandonment, and impulsive behaviors.',
+    keyFeatures: [
+      'Severe emotional hypersensitivity & prolonged return to baseline emotional state',
+      'Amygdala hyper-reactivity combined with decreased prefrontal top-down inhibition',
+      'Splitting defense mechanisms and chronic feelings of emptiness'
+    ],
+    clinicalApplication: 'The primary indication for Dialectical Behavior Therapy (DBT), emphasizing distress tolerance, mindfulness, emotion regulation, and interpersonal effectiveness.',
+    axolotlParallel: 'Parallels structural cellular instability during early blastema formation before differentiation signals lock in permanent cell identity.',
+    neurotransmittersOrTheorists: ['Marsha Linehan', 'Serotonin', 'Opioid System', 'Frontolimbic Circuit'],
+    simulationType: 'amygdala_response'
+  },
+  {
+    title: 'Synaptic Pruning',
+    category: 'Neuroscience',
+    definition: 'The essential neurodevelopmental process of eliminating redundant, weak, or unused synaptic connections, streamlining neural architecture for cognitive efficiency.',
+    keyFeatures: [
+      'Microglial engulfment and phagocytosis of complement-tagged synapses (C1q, C3)',
+      'Heightened activity during critical early childhood and adolescent neurodevelopmental windows',
+      'Governed by experience-dependent neural firing patterns ("use it or lose it")'
+    ],
+    clinicalApplication: 'Atypical synaptic pruning timing is implicated in neurodevelopmental conditions (over-pruning in schizophrenia vs. under-pruning in autism spectrum conditions).',
+    axolotlParallel: 'Directly mirrors cellular remodeling and tissue resorption during amphibian metamorphosis and limb regenerative restructuring.',
+    neurotransmittersOrTheorists: ['Microglia', 'Complement Cascade C1q', 'BDNF', 'Glutamate'],
+    simulationType: 'dopamine_synapse'
+  },
+  {
+    title: 'Autism Spectrum Disorder (ASD)',
+    category: 'Disorder',
+    definition: 'A diverse neurodevelopmental condition characterized by unique variations in social interaction, communication, sensory processing sensitivities, and specialized hyperfocused interests.',
+    keyFeatures: [
+      'Altered local vs. global neural hyper-connectivity & atypical synaptic pruning',
+      'Sensory processing differences (hyper- or hypo-reactivity to environmental stimuli)',
+      'Specialized hyperfocused interests, passion for predictability, and self-regulatory stimming behaviors'
+    ],
+    clinicalApplication: 'Supported via neurodiversity-affirming care, occupational therapy for sensory integration, speech-language therapy, and environmental scaffolding.',
+    axolotlParallel: 'Parallels the specialized mechanoreceptive lateral line system of axolotls, hyper-attuned to subtle fluid movements and environmental vibrations.',
+    neurotransmittersOrTheorists: ['GABA/Glutamate Balance', 'Oxytocin', 'Serotonin', 'Lorna Wing'],
+    simulationType: 'amygdala_response'
+  },
+  {
+    title: 'Attention Deficit Hyperactivity Disorder (ADHD)',
+    category: 'Disorder',
+    definition: 'A neurodevelopmental condition involving persistent variations in executive function, working memory, task initiation, and impulse regulation, modulated by prefrontal-striatal catecholamine signaling.',
+    keyFeatures: [
+      'Prefrontal cortex dopamine and norepinephrine signaling differences',
+      'Interest-based nervous system marked by hyperfocus state shifts and variable task persistence',
+      'Executive function differences in working memory, time perception, and cognitive inhibition'
+    ],
+    clinicalApplication: 'Managed through psychoeducation, behavioral scaffolding, executive coaching, and stimulant (Methylphenidate/Amphetamine) or non-stimulant pharmacological support.',
+    axolotlParallel: 'Reflects rapid exploratory burst swim movements in axolotls driven by sudden changes in environmental ambient stimuli.',
+    neurotransmittersOrTheorists: ['Dopamine Transporter (DAT)', 'Norepinephrine (NET)', 'Prefrontal Cortex', 'Russell Barkley'],
+    simulationType: 'dopamine_synapse'
   }
 ];
 

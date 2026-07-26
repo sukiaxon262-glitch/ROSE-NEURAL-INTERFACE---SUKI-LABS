@@ -172,10 +172,19 @@ export const HolographicSimulation3D: React.FC<Props> = ({ simulationState, onSe
       rendererRef.current.setSize(w, h);
     };
 
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && mountRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        handleResize();
+      });
+      resizeObserver.observe(mountRef.current);
+    }
+
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (resizeObserver) resizeObserver.disconnect();
       if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
       particlesGeometry.dispose();
       particlesMaterial.dispose();

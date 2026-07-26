@@ -1,17 +1,19 @@
 import React, { useState, useEffect, useRef, Component, ErrorInfo, ReactNode } from 'react';
 import { SimulationState, ChatMessage } from './types';
 import { HolographicSimulation3D } from './components/HolographicSimulation3D';
+import { HolographicHeart3D } from './components/HolographicHeart3D';
 import { JarvisArcReactorHUD } from './components/JarvisArcReactorHUD';
 import { PsychologyCodex } from './components/PsychologyCodex';
 import { PsychologyDictionary } from './components/PsychologyDictionary';
 import { BrainAtlas } from './components/BrainAtlas';
 import { HubbleSpaceTelescope } from './components/HubbleSpaceTelescope';
 import { AxolotlBiologyCodex } from './components/AxolotlBiologyCodex';
+import { SpacePsychology } from './components/SpacePsychology';
 import { TelemetryDiagnostics } from './components/TelemetryDiagnostics';
 import { ChatConsole } from './components/ChatConsole';
 import { hudAudio } from './lib/audioSynthesizer';
 import { speechEngine } from './lib/speechEngine';
-import { Sparkles, Brain, BookOpen, Layers, Telescope, Dna, Activity, Terminal, Shield, Cpu, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Sparkles, Brain, BookOpen, Layers, Telescope, Dna, Activity, Terminal, Shield, Cpu, RefreshCw, AlertTriangle, Heart, Rocket } from 'lucide-react';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -81,7 +83,7 @@ export default function App() {
 }
 
 function MainAppContent() {
-  const [activeTab, setActiveTab] = useState<'3d_matrix' | 'psychology' | 'dictionary' | 'brain_atlas' | 'hubble' | 'axolotl' | 'telemetry'>('3d_matrix');
+  const [activeTab, setActiveTab] = useState<'3d_matrix' | '3d_heart' | 'psychology' | 'dictionary' | 'brain_atlas' | 'space_psychology' | 'hubble' | 'axolotl' | 'telemetry'>('3d_matrix');
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isListening, setIsListening] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -318,6 +320,18 @@ function MainAppContent() {
           </button>
 
           <button
+            onClick={() => { setActiveTab('3d_heart'); hudAudio.playClick(); }}
+            className={`min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+              activeTab === '3d_heart'
+                ? 'bg-pink-500 text-black shadow-[0_0_12px_#ec4899]'
+                : 'text-pink-300/70 hover:text-white hover:bg-pink-500/20'
+            }`}
+          >
+            <Heart className="w-4 h-4 text-pink-300 fill-pink-400/40" />
+            <span>3D HOLO HEART</span>
+          </button>
+
+          <button
             onClick={() => { setActiveTab('psychology'); hudAudio.playClick(); }}
             className={`min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
               activeTab === 'psychology'
@@ -351,6 +365,18 @@ function MainAppContent() {
           >
             <Layers className="w-4 h-4" />
             <span>BRAIN ATLAS</span>
+          </button>
+
+          <button
+            onClick={() => { setActiveTab('space_psychology'); hudAudio.playClick(); }}
+            className={`min-h-[44px] px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${
+              activeTab === 'space_psychology'
+                ? 'bg-pink-500 text-black shadow-[0_0_12px_#ec4899]'
+                : 'text-pink-300/70 hover:text-white hover:bg-pink-500/20'
+            }`}
+          >
+            <Rocket className="w-4 h-4 text-pink-300 animate-pulse" />
+            <span>SPACE PSYCHOLOGY</span>
           </button>
 
           <button
@@ -416,6 +442,10 @@ function MainAppContent() {
             </div>
           )}
 
+          {activeTab === '3d_heart' && (
+            <HolographicHeart3D />
+          )}
+
           {activeTab === 'psychology' && (
             <PsychologyCodex onTriggerSimulation={triggerDirectSimulation} />
           )}
@@ -426,6 +456,10 @@ function MainAppContent() {
 
           {activeTab === 'brain_atlas' && (
             <BrainAtlas onTriggerSimulation={triggerDirectSimulation} />
+          )}
+
+          {activeTab === 'space_psychology' && (
+            <SpacePsychology />
           )}
 
           {activeTab === 'hubble' && (
