@@ -294,7 +294,7 @@ export const PsychologyDictionary: React.FC<PsychologyDictionaryProps> = ({ onTr
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Speech Recognition is not supported on this browser version, Miss.');
+      speechEngine.speak('Speech recognition is not supported on this browser version, Miss. Please use keyboard entry.');
       return;
     }
 

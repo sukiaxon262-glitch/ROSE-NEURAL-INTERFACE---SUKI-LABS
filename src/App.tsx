@@ -128,7 +128,15 @@ function MainAppContent() {
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Speech Recognition is not supported on this browser version, Miss.');
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `notice_${Date.now()}`,
+          role: 'assistant',
+          text: 'Speech Recognition is not supported by this browser engine, Miss. You may type your message directly in the command prompt below.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
       return;
     }
 

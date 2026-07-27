@@ -41,12 +41,13 @@ export class SpeechEngine {
     }
 
     const utterance = new SpeechSynthesisUtterance(cleanedText);
-    utterance.rate = 1.05; // Sophisticated, articulate velocity
-    utterance.pitch = 1.15; // Pleasant, articulate feminine pitch tone
+    utterance.rate = 0.98; // Relaxed, casual conversational pace
+    utterance.pitch = 1.0; // Warm, natural, grounded casual feminine pitch
 
     const voices = this.synth.getVoices();
     
-    // Explicit list of known female voice names across OS/browsers
+    // Priorities for modern natural/casual female voices
+    const topNaturalKeywords = ['natural', 'online', 'neural', 'samantha', 'aria', 'jenny', 'ava', 'google us english'];
     const femaleVoiceKeywords = [
       'female', 'samantha', 'victoria', 'karen', 'zira', 'moira', 'fiona', 'kate', 
       'serena', 'ava', 'allison', 'aria', 'jenny', 'ana', 'sonia', 'mia', 'emma', 
@@ -58,16 +59,28 @@ export class SpeechEngine {
       'alex', 'fred', 'arthur', 'tom', 'microsoft mark'
     ];
 
-    // 1. Try to find an English voice matching female keywords
+    // 1. Try to find a high-quality natural/online English female voice first
     let preferredVoice = voices.find(v => {
       const name = v.name.toLowerCase();
       const isEnglish = v.lang.startsWith('en');
       const isFemale = femaleVoiceKeywords.some(kw => name.includes(kw));
+      const isNatural = topNaturalKeywords.some(kw => name.includes(kw));
       const isMale = maleVoiceKeywords.some(kw => name.includes(kw));
-      return isEnglish && isFemale && !isMale;
+      return isEnglish && isFemale && isNatural && !isMale;
     });
 
-    // 2. If not found, find any English voice that does not explicitly match male keywords
+    // 2. Try any English voice matching female keywords
+    if (!preferredVoice) {
+      preferredVoice = voices.find(v => {
+        const name = v.name.toLowerCase();
+        const isEnglish = v.lang.startsWith('en');
+        const isFemale = femaleVoiceKeywords.some(kw => name.includes(kw));
+        const isMale = maleVoiceKeywords.some(kw => name.includes(kw));
+        return isEnglish && isFemale && !isMale;
+      });
+    }
+
+    // 3. If not found, find any English voice that does not explicitly match male keywords
     if (!preferredVoice) {
       preferredVoice = voices.find(v => {
         const name = v.name.toLowerCase();

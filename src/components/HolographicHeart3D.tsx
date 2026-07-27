@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { 
-  Heart, RotateCw, ZoomIn, ZoomOut, Zap, Volume2, 
-  Activity, Layers, RefreshCcw, Sparkles, Info, Flame, ShieldCheck
+  Heart, RotateCw, ZoomIn, ZoomOut, Zap, Volume2, VolumeX,
+  Activity, Layers, RefreshCcw, Sparkles, Info, Flame, ShieldCheck,
+  Plus, Minus
 } from 'lucide-react';
 import { hudAudio } from '../lib/audioSynthesizer';
 import { speechEngine } from '../lib/speechEngine';
@@ -75,6 +76,203 @@ const HUMAN_HEART_FACTS: HeartFactCategory[] = [
   }
 ];
 
+// Helper to construct a smooth, mathematically clean 3D Parametric Holographic Heart
+function createSleek3DHeartGeometry(uSegs = 56, vSegs = 56) {
+  const geo = new THREE.BufferGeometry();
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+
+  for (let i = 0; i <= uSegs; i++) {
+    const u = (i / uSegs) * Math.PI * 2 - Math.PI; // -PI to PI around the heart shape
+    const sinU = Math.sin(u);
+    const cosU = Math.cos(u);
+    const cos2U = Math.cos(2 * u);
+    const cos3U = Math.cos(3 * u);
+    const cos4U = Math.cos(4 * u);
+
+    // Smooth mathematical 2D Heart cross-section
+    const hx = 16 * Math.pow(sinU, 3);
+    const hy = 13 * cosU - 5 * cos2U - 2 * cos3U - cos4U;
+
+    for (let j = 0; j <= vSegs; j++) {
+      const v = (j / vSegs) * Math.PI - Math.PI / 2; // -PI/2 to PI/2 for 3D depth expansion
+      const cosV = Math.cos(v);
+      const sinV = Math.sin(v);
+
+      const scale = 0.22;
+      const x = hx * cosV * scale;
+      const y = (hy + 2.5) * cosV * scale; // Center y-axis balance
+      const z = sinV * 3.2 * (0.85 + 0.15 * Math.abs(cosU)) * scale;
+
+      positions.push(x, y, z);
+      uvs.push(i / uSegs, j / vSegs);
+    }
+  }
+
+  for (let i = 0; i < uSegs; i++) {
+    for (let j = 0; j < vSegs; j++) {
+      const a = i * (vSegs + 1) + j;
+      const b = (i + 1) * (vSegs + 1) + j;
+      const c = (i + 1) * (vSegs + 1) + (j + 1);
+      const d = i * (vSegs + 1) + (j + 1);
+
+      indices.push(a, b, d);
+      indices.push(b, c, d);
+    }
+  }
+
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+
+  return geo;
+}
+
+/**
+ * Real-time Electrocardiogram (ECG) Waveform Canvas Monitor
+ * Draws a P-QRS-T wave tracing synchronized to the exact set BPM frequency.
+ */
+function EcgWaveformCanvas({ bpm, isBeating }: { bpm: number; isBeating: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    const points: number[] = [];
+
+    const handleResize = () => {
+      if (canvas && canvas.parentElement) {
+        const w = canvas.parentElement.clientWidth;
+        if (w > 0 && canvas.width !== w) {
+          canvas.width = w;
+        }
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    const draw = (now: number) => {
+      animId = requestAnimationFrame(draw);
+      
+      const width = canvas.width || 380;
+      const height = canvas.height || 60;
+      const centerY = height / 2;
+
+      ctx.clearRect(0, 0, width, height);
+
+      // Background HUD grid pattern
+      ctx.strokeStyle = 'rgba(236, 72, 153, 0.12)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < width; x += 20) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < height; y += 15) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      if (isBeating) {
+        // Calculate beat cycle phase based on exact BPM
+        const periodSeconds = 60 / bpm;
+        const normT = ((now / 1000) % periodSeconds) / periodSeconds; // 0 to 1
+
+        let val = 0;
+        // P-wave (Atrial Depolarization)
+        if (normT > 0.08 && normT < 0.16) {
+          val = Math.sin(((normT - 0.08) / 0.08) * Math.PI) * 0.18;
+        }
+        // QRS Complex (Ventricular Depolarization - Lub-Dub surge)
+        else if (normT >= 0.18 && normT < 0.20) {
+          val = -0.15; // Q wave dip
+        } else if (normT >= 0.20 && normT < 0.24) {
+          val = 0.95; // R peak spike
+        } else if (normT >= 0.24 && normT < 0.27) {
+          val = -0.35; // S wave rebound
+        }
+        // T-wave (Ventricular Repolarization)
+        else if (normT >= 0.36 && normT < 0.52) {
+          val = Math.sin(((normT - 0.36) / 0.16) * Math.PI) * 0.32;
+        }
+
+        points.push(val);
+      } else {
+        // Flatline
+        points.push(0);
+      }
+
+      while (points.length > width) {
+        points.shift();
+      }
+
+      // Draw glowing ECG Line
+      ctx.shadowColor = '#ec4899';
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = '#f472b6';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+
+      for (let i = 0; i < points.length; i++) {
+        const x = i;
+        const y = centerY - points[i] * (height * 0.42);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Draw leading scanner pulse dot
+      if (points.length > 0) {
+        const lastX = points.length - 1;
+        const lastY = centerY - points[lastX] * (height * 0.42);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(lastX, lastY, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
+    animId = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [bpm, isBeating]);
+
+  return (
+    <div className="w-full bg-black/80 rounded-lg p-2.5 border border-pink-500/20 relative overflow-hidden space-y-1">
+      <div className="flex justify-between items-center text-[10px] text-pink-300 font-mono">
+        <span className="flex items-center gap-1.5 text-pink-400 font-bold">
+          <Activity className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
+          CARDIAC ECG MONITORED RHYTHM
+        </span>
+        <span className="text-pink-300 font-bold font-mono px-2 py-0.5 rounded bg-pink-500/20 border border-pink-500/30">
+          {isBeating ? `${bpm} BPM` : 'ASYS (FLATLINE)'}
+        </span>
+      </div>
+      <canvas
+        ref={canvasRef}
+        width={380}
+        height={60}
+        className="w-full h-14 rounded border border-pink-500/15 bg-black/95 shadow-inner"
+      />
+    </div>
+  );
+}
+
 export function HolographicHeart3D() {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -89,6 +287,7 @@ export function HolographicHeart3D() {
   const [bpm, setBpm] = useState<number>(72);
   const [isAutoRotating, setIsAutoRotating] = useState<boolean>(true);
   const [isBeating, setIsBeating] = useState<boolean>(true);
+  const [isCardiacAudioEnabled, setIsCardiacAudioEnabled] = useState<boolean>(false);
   const [wireframeOpacity, setWireframeOpacity] = useState<number>(0.8);
   const [displayStyle, setDisplayStyle] = useState<'pink_hologram' | 'neon_magenta' | 'rose_gold' | 'cyan_tactical'>('pink_hologram');
   const [zoomLevel, setZoomLevel] = useState<number>(12);
@@ -97,6 +296,9 @@ export function HolographicHeart3D() {
   // Animation sync refs for smooth toggling without scene rebuild
   const isAutoRotatingRef = useRef(isAutoRotating);
   const isBeatingRef = useRef(isBeating);
+  const bpmRef = useRef(bpm);
+  const isCardiacAudioRef = useRef(isCardiacAudioEnabled);
+  const lastBeatCycleIndexRef = useRef(-1);
 
   useEffect(() => {
     isAutoRotatingRef.current = isAutoRotating;
@@ -105,6 +307,14 @@ export function HolographicHeart3D() {
   useEffect(() => {
     isBeatingRef.current = isBeating;
   }, [isBeating]);
+
+  useEffect(() => {
+    bpmRef.current = bpm;
+  }, [bpm]);
+
+  useEffect(() => {
+    isCardiacAudioRef.current = isCardiacAudioEnabled;
+  }, [isCardiacAudioEnabled]);
 
   // Mouse interaction variables
   const prevMousePos = useRef({ x: 0, y: 0 });
@@ -175,21 +385,38 @@ export function HolographicHeart3D() {
     if (displayStyle === 'rose_gold') primaryColorHex = 0xffb3c6;
     if (displayStyle === 'cyan_tactical') primaryColorHex = 0x00f0ff;
 
+    // Inner Chamber Pulsing Point Light
+    const heartPointLight = new THREE.PointLight(primaryColorHex, 2.5, 12);
+    heartPointLight.position.set(0, 0, 0);
+    scene.add(heartPointLight);
+
+    // Materials
     const wireMat = new THREE.MeshStandardMaterial({
       color: primaryColorHex,
       wireframe: true,
       transparent: true,
       opacity: wireframeOpacity,
       emissive: primaryColorHex,
-      emissiveIntensity: 0.85,
+      emissiveIntensity: 0.9,
+      metalness: 0.85,
+      roughness: 0.15
+    });
+
+    const glassShellMat = new THREE.MeshStandardMaterial({
+      color: primaryColorHex,
+      transparent: true,
+      opacity: Math.min(0.35, wireframeOpacity * 0.5),
+      emissive: primaryColorHex,
+      emissiveIntensity: 0.35,
       metalness: 0.9,
-      roughness: 0.1
+      roughness: 0.1,
+      side: THREE.DoubleSide
     });
 
     const glowCoreMat = new THREE.MeshBasicMaterial({
       color: primaryColorHex,
       transparent: true,
-      opacity: 0.85,
+      opacity: 0.75,
       wireframe: true
     });
 
@@ -198,41 +425,45 @@ export function HolographicHeart3D() {
     heartGroupRef.current = heartGroup;
     scene.add(heartGroup);
 
-    // --- CREATE BEAUTIFUL 3D CLASSIC HEART SHAPE ---
-    const heartShape = new THREE.Shape();
-    const x = 0, y = 0;
+    // --- CREATE SLEEK 3D PARAMETRIC HEART MESH ---
+    const heartGeo = createSleek3DHeartGeometry(60, 60);
 
-    heartShape.moveTo(x + 0.25, y + 0.25);
-    heartShape.bezierCurveTo(x + 0.25, y + 0.25, x + 0.2, y, x, y);
-    heartShape.bezierCurveTo(x - 0.3, y, x - 0.3, y + 0.35, x - 0.3, y + 0.35);
-    heartShape.bezierCurveTo(x - 0.3, y + 0.55, x - 0.1, y + 0.77, x + 0.25, y + 1.0);
-    heartShape.bezierCurveTo(x + 0.6, y + 0.77, x + 0.8, y + 0.55, x + 0.8, y + 0.35);
-    heartShape.bezierCurveTo(x + 0.8, y, x + 0.5, y, x + 0.5, y);
-    heartShape.bezierCurveTo(x + 0.35, y, x + 0.25, y + 0.16, x + 0.25, y + 0.25);
+    // Outer Glass Holographic Shell
+    const glassShellMesh = new THREE.Mesh(heartGeo, glassShellMat);
+    heartGroup.add(glassShellMesh);
 
-    const extrudeSettings = {
-      depth: 0.45,
-      bevelEnabled: true,
-      bevelSegments: 16,
-      steps: 8,
-      bevelSize: 0.25,
-      bevelThickness: 0.25,
-    };
-
-    const heartGeo = new THREE.ExtrudeGeometry(heartShape, extrudeSettings);
-    heartGeo.center();
-    heartGeo.scale(3.2, 3.2, 3.2);
-    heartGeo.rotateZ(Math.PI); // Flip upside down so tip points down
-
+    // Main Holographic Wireframe Cage
     const mainHeartMesh = new THREE.Mesh(heartGeo, wireMat);
     mainHeartMeshRef.current = mainHeartMesh;
     heartGroup.add(mainHeartMesh);
 
     // Inner Glowing Core Heart
     const innerHeartGeo = heartGeo.clone();
-    innerHeartGeo.scale(0.7, 0.7, 0.7);
+    innerHeartGeo.scale(0.58, 0.58, 0.58);
     const innerHeartMesh = new THREE.Mesh(innerHeartGeo, glowCoreMat);
     heartGroup.add(innerHeartMesh);
+
+    // --- SLEEK ORBITING HOLO ENERGY HALO RINGS ---
+    const haloGroup = new THREE.Group();
+    const haloRingMat = new THREE.LineBasicMaterial({
+      color: primaryColorHex,
+      transparent: true,
+      opacity: 0.45
+    });
+
+    const haloGeo1 = new THREE.RingGeometry(2.8, 2.84, 64);
+    const haloRing1 = new THREE.LineLoop(haloGeo1, haloRingMat);
+    haloRing1.rotation.x = Math.PI / 3;
+    haloRing1.rotation.y = Math.PI / 6;
+    haloGroup.add(haloRing1);
+
+    const haloGeo2 = new THREE.RingGeometry(3.2, 3.24, 64);
+    const haloRing2 = new THREE.LineLoop(haloGeo2, haloRingMat);
+    haloRing2.rotation.x = -Math.PI / 4;
+    haloRing2.rotation.y = -Math.PI / 5;
+    haloGroup.add(haloRing2);
+
+    heartGroup.add(haloGroup);
 
     // --- HOLOGRAPHIC TARGET RINGS & FLOOR GRID ---
     const baseGroup = new THREE.Group();
@@ -296,23 +527,68 @@ export function HolographicHeart3D() {
         heartGroupRef.current.rotation.y = heartRotation.current.y;
       }
 
-      // Rhythmic Lub-Dub Pulse Heartbeat
+      // Rhythmic Lub-Dub Pulse Heartbeat & Internal Chamber Glow (Physiologically Accurate to set BPM)
       if (mainHeartMeshRef.current) {
         if (isBeatingRef.current) {
-          const bps = bpm / 60; // Beats per second
-          const beatCycle = (elapsedTime * bps) % 1;
-          let beatScale = 1.0;
+          const currentBpm = bpmRef.current;
+          const cyclePeriod = 60 / currentBpm; // Total cycle period in seconds (e.g., 0.833s at 72 BPM)
+          const currentCycleIndex = Math.floor(elapsedTime / cyclePeriod);
 
-          if (beatCycle < 0.15) {
-            beatScale = 1.0 + Math.sin((beatCycle / 0.15) * Math.PI) * 0.15; // Lub
-          } else if (beatCycle >= 0.22 && beatCycle < 0.35) {
-            beatScale = 1.0 + Math.sin(((beatCycle - 0.22) / 0.13) * Math.PI) * 0.22; // Dub
+          // Trigger acoustic "Lub-Dub" sound on every beat boundary if cardiac audio is active
+          if (currentCycleIndex > lastBeatCycleIndexRef.current) {
+            lastBeatCycleIndexRef.current = currentCycleIndex;
+            if (isCardiacAudioRef.current) {
+              hudAudio.playLubDubSound(0.20);
+            }
           }
+
+          // Offset inside the current beat cycle (0 to cyclePeriod seconds)
+          const tCycle = elapsedTime - currentCycleIndex * cyclePeriod;
+
+          // Systole contraction phase duration (Wiggers diagram ratio)
+          const systoleDuration = Math.min(cyclePeriod * 0.70, Math.max(0.18, 0.30 - (currentBpm - 60) * 0.00075));
+          const diastoleDuration = cyclePeriod - systoleDuration;
+
+          let beatScale = 1.0;
+          let lightIntensity = 2.0;
+
+          if (tCycle < systoleDuration) {
+            // Active Systole Contraction Phase (Double-bump "Lub-Dub" atrial and ventricular pump)
+            const sysProgress = tCycle / systoleDuration; // 0 to 1
+            if (sysProgress < 0.40) {
+              // "Lub" (S1 - Atrial contraction & AV valves closure surge)
+              const factor = Math.sin((sysProgress / 0.40) * Math.PI);
+              beatScale = 1.0 + factor * 0.16;
+              lightIntensity = 2.0 + factor * 3.2;
+            } else if (sysProgress >= 0.40 && sysProgress < 0.52) {
+              // Isovolumetric brief recoil transition
+              beatScale = 1.02;
+              lightIntensity = 2.2;
+            } else {
+              // "Dub" (S2 - Ventricular contraction & Semilunar Aortic valves closure)
+              const factor = Math.sin(((sysProgress - 0.52) / 0.48) * Math.PI);
+              beatScale = 1.0 + factor * 0.24;
+              lightIntensity = 2.0 + factor * 4.2;
+            }
+          } else {
+            // Diastole Phase (Gentle cardiac muscle relaxation & blood refilling)
+            const diasProgress = (tCycle - systoleDuration) / diastoleDuration;
+            const factor = Math.sin(diasProgress * Math.PI);
+            beatScale = 1.0 + factor * 0.03;
+            lightIntensity = 2.0;
+          }
+
           mainHeartMeshRef.current.scale.set(beatScale, beatScale, beatScale);
+          heartPointLight.intensity = lightIntensity;
         } else {
           mainHeartMeshRef.current.scale.set(1.0, 1.0, 1.0);
+          heartPointLight.intensity = 2.0;
         }
       }
+
+      // Rotate Orbiting Halo Rings
+      haloRing1.rotation.z = elapsedTime * 0.25;
+      haloRing2.rotation.z = -elapsedTime * 0.35;
 
       // Particle circulation movement
       if (particleSystemRef.current) {
@@ -362,7 +638,7 @@ export function HolographicHeart3D() {
         mountRef.current.innerHTML = '';
       }
     };
-  }, [displayStyle, wireframeOpacity, bpm]);
+  }, [displayStyle, wireframeOpacity]);
 
   // Mouse & Touch Drag Controls
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -620,44 +896,208 @@ export function HolographicHeart3D() {
             </div>
           </div>
 
-          {/* Heart Rate (BPM) Slider & Wireframe Opacity */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-pink-300 pt-1">
-            <div className="space-y-1.5 bg-black/40 p-2 rounded-lg border border-pink-500/10">
-              <div className="flex justify-between items-center text-[11px]">
-                <span className="flex items-center gap-1.5 font-bold text-pink-400">
-                  <Activity className="w-3.5 h-3.5 animate-pulse text-pink-400" />
-                  HEART RATE (BPM)
+          {/* Advanced Heart Rate (BPM) & Cardiac Rhythm Control Panel */}
+          <div className="space-y-3 bg-black/60 p-3 rounded-lg border border-pink-500/20 text-xs text-pink-300">
+            {/* Header with State Badge & Cardiac Audio Switch */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-pink-500/20 pb-2">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-pink-400 animate-pulse" />
+                <span className="text-xs font-bold text-pink-200">CARDIAC RHYTHM CONTROL</span>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-bold ${
+                  bpm < 60
+                    ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                    : bpm <= 85
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : bpm <= 115
+                    ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                    : bpm <= 155
+                    ? 'bg-orange-500/20 text-orange-300 border-orange-500/40'
+                    : 'bg-red-500/20 text-red-300 border-red-500/40'
+                }`}>
+                  {isBeating
+                    ? bpm < 60
+                      ? 'BRADYCARDIA / SLEEP'
+                      : bpm <= 85
+                      ? 'RESTING RHYTHM'
+                      : bpm <= 115
+                      ? 'MODERATE EXERCISE'
+                      : bpm <= 155
+                      ? 'CARDIO / INTENSE'
+                      : 'MAXIMUM / TACHYCARDIA'
+                    : 'PAUSED'}
                 </span>
-                <span className="text-pink-300 font-bold">{isBeating ? `${bpm} BPM` : 'PAUSED'}</span>
               </div>
-              <input
-                type="range"
-                min="40"
-                max="160"
-                value={bpm}
-                disabled={!isBeating}
-                onChange={(e) => setBpm(Number(e.target.value))}
-                className="w-full accent-pink-500 cursor-pointer h-1.5 rounded-lg bg-pink-950 disabled:opacity-40"
-              />
+
+              {/* Cardiac Sound Effect Toggle */}
+              <button
+                onClick={() => {
+                  const nextState = !isCardiacAudioEnabled;
+                  setIsCardiacAudioEnabled(nextState);
+                  hudAudio.playClick();
+                  if (nextState) hudAudio.playLubDubSound(0.25);
+                }}
+                className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all flex items-center gap-1.5 ${
+                  isCardiacAudioEnabled
+                    ? 'bg-pink-500/30 border-pink-400 text-pink-200 shadow-[0_0_10px_#ec4899]'
+                    : 'bg-black/50 border-pink-500/30 text-pink-400 hover:bg-pink-500/20'
+                }`}
+                title="Synthesize real acoustic Lub-Dub heartbeat sound"
+              >
+                {isCardiacAudioEnabled ? (
+                  <Volume2 className="w-3.5 h-3.5 text-pink-300 animate-bounce" />
+                ) : (
+                  <VolumeX className="w-3.5 h-3.5 text-pink-400/60" />
+                )}
+                <span>{isCardiacAudioEnabled ? 'CARDIAC AUDIO: ON' : 'CARDIAC AUDIO: OFF'}</span>
+              </button>
             </div>
 
-            <div className="space-y-1.5 bg-black/40 p-2 rounded-lg border border-pink-500/10">
-              <div className="flex justify-between items-center text-[11px]">
-                <span className="flex items-center gap-1.5 font-bold text-pink-400">
-                  <Layers className="w-3.5 h-3.5" />
-                  MESH OPACITY
-                </span>
-                <span className="text-pink-300 font-bold">{Math.round(wireframeOpacity * 100)}%</span>
+            {/* Live ECG Waveform Monitor */}
+            <EcgWaveformCanvas bpm={bpm} isBeating={isBeating} />
+
+            {/* BPM Controls: Steppers + Input + Range Slider + Presets */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              {/* Stepper Buttons & Manual Input */}
+              <div className="space-y-2 bg-black/40 p-2.5 rounded-lg border border-pink-500/10">
+                <div className="flex justify-between items-center text-[11px]">
+                  <span className="text-pink-400 font-bold flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5" />
+                    HEART RATE FREQUENCY
+                  </span>
+                  <span className="text-pink-300 font-bold font-mono">{isBeating ? `${bpm} BPM` : 'PAUSED'}</span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => {
+                      setBpm((prev) => Math.max(30, prev - 5));
+                      hudAudio.playClick();
+                    }}
+                    disabled={!isBeating}
+                    className="px-2.5 py-1.5 rounded-lg bg-pink-950/80 border border-pink-500/30 text-pink-300 hover:bg-pink-500/30 font-bold text-xs transition-colors shrink-0 disabled:opacity-40"
+                    title="Decrease 5 BPM"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+
+                  <div className="relative flex-1">
+                    <input
+                      type="number"
+                      min="30"
+                      max="220"
+                      value={bpm}
+                      disabled={!isBeating}
+                      onChange={(e) => {
+                        const val = Math.min(220, Math.max(30, Number(e.target.value) || 30));
+                        setBpm(val);
+                      }}
+                      className="w-full bg-black/80 border border-pink-500/40 rounded-lg px-3 py-1.5 text-center text-sm font-bold font-mono text-pink-300 focus:outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-400 disabled:opacity-50"
+                    />
+                    <span className="absolute right-2 top-2 text-[10px] text-pink-400/60 font-bold">BPM</span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setBpm((prev) => Math.min(220, prev + 5));
+                      hudAudio.playClick();
+                    }}
+                    disabled={!isBeating}
+                    className="px-2.5 py-1.5 rounded-lg bg-pink-950/80 border border-pink-500/30 text-pink-300 hover:bg-pink-500/30 font-bold text-xs transition-colors shrink-0 disabled:opacity-40"
+                    title="Increase 5 BPM"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <input
+                  type="range"
+                  min="30"
+                  max="220"
+                  value={bpm}
+                  disabled={!isBeating}
+                  onChange={(e) => setBpm(Number(e.target.value))}
+                  className="w-full accent-pink-500 cursor-pointer h-1.5 rounded-lg bg-pink-950 disabled:opacity-40"
+                />
               </div>
-              <input
-                type="range"
-                min="0.2"
-                max="1.0"
-                step="0.05"
-                value={wireframeOpacity}
-                onChange={(e) => setWireframeOpacity(Number(e.target.value))}
-                className="w-full accent-pink-500 cursor-pointer h-1.5 rounded-lg bg-pink-950"
-              />
+
+              {/* Preset BPM Frequency Buttons & Mesh Opacity */}
+              <div className="space-y-2 bg-black/40 p-2.5 rounded-lg border border-pink-500/10">
+                <span className="text-[11px] text-pink-400 font-bold block">PHYSIOLOGICAL PRESETS</span>
+                <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                  {[
+                    { label: 'SLEEP (50)', val: 50 },
+                    { label: 'REST (72)', val: 72 },
+                    { label: 'WALK (95)', val: 95 },
+                    { label: 'WORK (120)', val: 120 },
+                    { label: 'RUN (155)', val: 155 },
+                    { label: 'PEAK (185)', val: 185 },
+                  ].map((preset) => (
+                    <button
+                      key={preset.val}
+                      onClick={() => {
+                        setBpm(preset.val);
+                        setIsBeating(true);
+                        hudAudio.playClick();
+                      }}
+                      className={`py-1 px-1 rounded border font-bold transition-all text-center truncate ${
+                        bpm === preset.val && isBeating
+                          ? 'bg-pink-500 text-black border-pink-400 shadow-[0_0_8px_#ec4899]'
+                          : 'bg-black/50 border-pink-500/30 text-pink-300 hover:bg-pink-500/20'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Mesh Opacity */}
+                <div className="space-y-1 pt-1 border-t border-pink-500/10">
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="text-pink-400 font-bold flex items-center gap-1">
+                      <Layers className="w-3 h-3" />
+                      MESH OPACITY
+                    </span>
+                    <span className="text-pink-300 font-bold">{Math.round(wireframeOpacity * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.2"
+                    max="1.0"
+                    step="0.05"
+                    value={wireframeOpacity}
+                    onChange={(e) => setWireframeOpacity(Number(e.target.value))}
+                    className="w-full accent-pink-500 cursor-pointer h-1.5 rounded-lg bg-pink-950"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Cardiac Rhythm Physiological Metrics Summary Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-pink-500/15 text-[10px] font-mono text-center">
+              <div className="bg-black/50 p-1.5 rounded border border-pink-500/20">
+                <span className="text-pink-400/70 block">BEAT PERIOD</span>
+                <span className="text-white font-bold">{isBeating ? `${Math.round(60000 / bpm)} ms` : '—'}</span>
+              </div>
+              <div className="bg-black/50 p-1.5 rounded border border-pink-500/20">
+                <span className="text-pink-400/70 block">SYSTOLE PHASE</span>
+                <span className="text-white font-bold">
+                  {isBeating ? `${Math.round(Math.min((60000 / bpm) * 0.7, Math.max(180, 300 - (bpm - 60) * 0.75)))} ms` : '—'}
+                </span>
+              </div>
+              <div className="bg-black/50 p-1.5 rounded border border-pink-500/20">
+                <span className="text-pink-400/70 block">DIASTOLE REST</span>
+                <span className="text-white font-bold">
+                  {isBeating
+                    ? `${Math.round(
+                        60000 / bpm - Math.min((60000 / bpm) * 0.7, Math.max(180, 300 - (bpm - 60) * 0.75))
+                      )} ms`
+                    : '—'}
+                </span>
+              </div>
+              <div className="bg-black/50 p-1.5 rounded border border-pink-500/20">
+                <span className="text-pink-400/70 block">EST. OUTPUT</span>
+                <span className="text-pink-300 font-bold">{isBeating ? `${((bpm * 70) / 1000).toFixed(1)} L/m` : '0 L/m'}</span>
+              </div>
             </div>
           </div>
         </div>
